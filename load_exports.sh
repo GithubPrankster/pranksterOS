@@ -1,5 +1,5 @@
 #!/bin/sh
-
-export PREFIX="$HOME/opt/cross"
+echo Export stuff. Pls.
+export PREFIX="$HOME/root"
 export TARGET=i686-elf
 export PATH="$PREFIX/bin:$PATH"

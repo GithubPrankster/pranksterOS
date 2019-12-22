@@ -95,12 +95,16 @@ void term_writestring(const char* data){
 void kernel_main(void){
     term_init();
     term_setcol(vga_entry_col(VGA_RED, VGA_BLACK));
-    term_writestring("****              ****\n**             *    **\n");
-    term_writestring("**            ***   **\n**           *****  **\n");
-    term_writestring("**            ***   **\n**             *    **\n");
-    term_writestring("**   * *            **\n**  * * *           **\n");
-    term_writestring("**   * *            **\n**                  **\n");
-    term_writestring("****              ****\n\n");
-    term_setcol(vga_entry_col(VGA_LIGHT_GREY, VGA_BLACK));
+    term_writestring("****              ****\n");
+    term_writestring("**            * *   **\n");
+    term_writestring("**           * * *  **\n");
+    term_writestring("**            * *   **\n");
+    term_writestring("**                  **\n");
+    term_writestring("**     *            **\n");
+    term_writestring("**    ***           **\n");
+    term_writestring("**  *******         **\n");
+    term_writestring("**    ***           **\n");
+    term_writestring("**     *            **\n");
+    term_writestring("****              ****\n");
     term_writestring("PranksterOS Ver. dev.0.1\n");
 }
