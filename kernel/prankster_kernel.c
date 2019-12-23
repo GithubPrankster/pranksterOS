@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "plibc/string.h"
+#include "plibc/kernel.h"
+
 #if defined(__linux__)
 #error "You may not know what you're doing."
 #endif
@@ -37,13 +40,6 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t col){
     return (uint16_t)uc | (uint16_t)col << 8;
 }
 
-size_t strlen(const char* str){
-    size_t len = 0;
-    while(str[len])
-        len++;
-    return len;
-}
-
 static const size_t CONSOLE_WIDTH = 80, CONSOLE_HEIGHT = 25;
 
 size_t term_row, term_column;
@@ -67,20 +63,36 @@ void term_setcol(uint8_t col){
     term_col = col;
 }
 
-void term_putentryat(char c, uint8_t col, size_t x, size_t y){
-    const size_t index = y * CONSOLE_WIDTH + x;
-    term_buffer[index] = vga_entry(c == '\n' ? ' ' : c, col);
+void term_update_cursor(unsigned int x, unsigned int y){
+    uint16_t pos = y * CONSOLE_WIDTH + x;
+    
+    outb(0x0F, 0x3D4);
+    outb((uint8_t)(pos & 0xFF), 0x3D5);
+    outb(0x0E, 0x3D4);
+    outb((uint8_t)((pos >> 8) & 0xFF), 0x3D5);
 }
 
-void term_putchar(char c){
+void term_putentryat(char c, uint8_t col, size_t x, size_t y){
+    term_update_cursor(x, y);
+    const size_t index = y * CONSOLE_WIDTH + x;
+    term_buffer[index] = vga_entry(c, col);
+}
+
+int term_putchar(char c){
+    if(c == '\n'){
+        term_column = 0;
+        if(++term_row == CONSOLE_HEIGHT)
+            term_row = 0;
+        return 0;
+    }
+
     term_putentryat(c, term_col, term_column, term_row);
-    if(c == '\n' || ++term_column == CONSOLE_WIDTH){
+    if(++term_column == CONSOLE_WIDTH){
         term_column = 0;
         if(++term_row == CONSOLE_HEIGHT)
             term_row = 0;
     }
-
-    
+    return 0;
 }
 
 void term_write(const char* data, size_t size){
@@ -92,9 +104,8 @@ void term_writestring(const char* data){
     term_write(data, strlen(data));
 }
 
-void kernel_main(void){
-    term_init();
-    term_setcol(vga_entry_col(VGA_RED, VGA_BLACK));
+void term_splashscreen(void){
+    term_setcol(vga_entry_col(VGA_RED, VGA_DARK_GREY));
     term_writestring("****              ****\n");
     term_writestring("**            * *   **\n");
     term_writestring("**           * * *  **\n");
@@ -105,6 +116,12 @@ void kernel_main(void){
     term_writestring("**  *******         **\n");
     term_writestring("**    ***           **\n");
     term_writestring("**     *            **\n");
-    term_writestring("****              ****\n");
-    term_writestring("PranksterOS Ver. dev.0.1\n");
+    term_writestring("****              ****\n\n");
+    term_setcol(vga_entry_col(VGA_LIGHT_GREY, VGA_BLACK));
+    term_writestring("PranksterOS Ver. dev.0.2\n");
+}
+
+void kernel_main(void){
+    term_init();
+    term_splashscreen();
 }
