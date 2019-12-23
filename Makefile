@@ -5,7 +5,7 @@ KERNEL_OBJS = $(patsubst %.c,%.o,$(KERNEL_SOURCES)) \
               $(patsubst %.asm,%.o,$(KERNEL_SOURCES_ASM))
 
 COMPILE_FLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
-AS_FLAGS =
+AS_FLAGS = -g
  
 CROSS_COMP = i686-elf
 CC = $(CROSS_COMP)-gcc
@@ -15,8 +15,13 @@ OBJCOPY = $(CROSS_COMP)-objcopy
 GRUB_MKRESCUE = grub-mkrescue
 ISO_DIR = isodir
 GRUB_CFG = grub.cfg
+
+QEMU = qemu-system-i386
+QEMU_FLAGS = -no-shutdown -no-reboot
+QEMU_BP = *kernel_main
+GDB = gdb
  
-.PHONY: all clean
+.PHONY: all clean debug
  
 all: kernel/$(KERNEL_NAME).iso
  
@@ -34,6 +39,18 @@ kernel/$(KERNEL_NAME).iso: kernel/$(KERNEL_NAME).elf
 	@echo '}'                                    >> $(ISO_DIR)/boot/grub/$(GRUB_CFG)
 	@echo 'Creating $@'
 	$(GRUB_MKRESCUE) -o $@ $(ISO_DIR)/
+
+debug: kernel/$(KERNEL_NAME).iso
+	$(QEMU) -cdrom $< $(QEMUFLAGS) -S -s &
+	$(GDB) kernel/$(KERNEL_NAME).elf \
+		-ex 'target remote localhost:1234' \
+		-ex 'layout src' \
+		-ex 'layout regs' \
+		-ex 'break $(QEMU_BP)' \
+		-ex 'continue'
+
+run: kernel/$(KERNEL_NAME).iso
+	$(QEMU) -cdrom kernel/$(KERNEL_NAME).iso
  
 %.o: %.c
 	$(CC) ${COMPILE_FLAGS} -c $< -o $@
