@@ -66,10 +66,10 @@ void term_setcol(uint8_t col){
 void term_update_cursor(unsigned int x, unsigned int y){
     uint16_t pos = y * CONSOLE_WIDTH + x;
     
-    outb(0x0F, 0x3D4);
-    outb((uint8_t)(pos & 0xFF), 0x3D5);
-    outb(0x0E, 0x3D4);
-    outb((uint8_t)((pos >> 8) & 0xFF), 0x3D5);
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
 void term_putentryat(char c, uint8_t col, size_t x, size_t y){
@@ -105,7 +105,7 @@ void term_writestring(const char* data){
 }
 
 void term_splashscreen(void){
-    term_setcol(vga_entry_col(VGA_RED, VGA_DARK_GREY));
+    term_setcol(vga_entry_col(VGA_WHITE, VGA_DARK_GREY));
     term_writestring("****              ****\n");
     term_writestring("**            * *   **\n");
     term_writestring("**           * * *  **\n");
@@ -118,7 +118,8 @@ void term_splashscreen(void){
     term_writestring("**     *            **\n");
     term_writestring("****              ****\n\n");
     term_setcol(vga_entry_col(VGA_LIGHT_GREY, VGA_BLACK));
-    term_writestring("PranksterOS Ver. dev.0.2\n");
+    term_writestring("PranksterOS Ver. dev.0.3\nCreated by Uneven Prankster.\nHow much wood could a woodchuck chuck,\n");
+    term_writestring("If a woodchuck could chuck wood?\n");
 }
 
 void kernel_main(void){
